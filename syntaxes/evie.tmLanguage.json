@@ -1,0 +1,41 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Evie",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.evie",
+				"match": "\\b(if|while|return|jump|else|import|export|ptr|type|func|use)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.evie",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.evie",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [{
+				"name": "comment.line",
+				"match": "#.*"
+			}]
+		}
+	},
+	"scopeName": "source.Evie"
+}
