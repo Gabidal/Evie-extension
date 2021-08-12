@@ -1,0 +1,12 @@
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\bin\Debug\Evie_Syntax.dll
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\bin\Debug\Evie_Syntax.vsix
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\bin\Debug\extension.vsixmanifest
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\Evie_Syntax.csprojAssemblyReference.cache
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\_EmptyResource.resources
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\Evie_Syntax.csproj.GenerateResource.cache
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\Evie_Syntax.csproj.CoreCompileInputs.cache
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\Evie_Syntax.dll
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\Evie_Syntax.pdb
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\extension.vsixmanifest
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\files.json
+C:\Users\Quanf\source\repos\Evie_Syntax\Evie_Syntax\obj\Debug\createTemplateManifests.cache

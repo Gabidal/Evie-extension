@@ -1,0 +1,6 @@
+﻿[$RootKey$\TextMate\Repositories]
+"Evie_Syntax"="$PackageFolder$\Grammars"
+
+; Match file extensions with icons. See full icon list at https://glyphlist.azurewebsites.net/knownmonikers/
+[$RootKey$\ShellFileAssociations\.e]
+"DefaultIconMoniker"="KnownMonikers.Airbrush"

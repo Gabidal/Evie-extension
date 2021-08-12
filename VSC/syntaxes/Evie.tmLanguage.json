@@ -9,33 +9,31 @@
 			"include": "#strings"
 		},
 		{
-			"include": "#comments"
+			"include": "#functions"
 		}
 	],
 	"repository": {
 		"keywords": {
 			"patterns": [{
-				"name": "keyword.control.evie",
-				"match": "\\b(if|while|return|jump|else|import|export|ptr|type|func|use)\\b"
+				"name": "keyword.control.Evie",
+				"match": "\\b(ptr|type|func|import|export|plain|size|format|if|else|while|for|return|use|)\\b"
 			}]
 		},
 		"strings": {
-			"name": "string.quoted.double.evie",
+			"name": "string.quoted.double.Evie",
 			"begin": "\"",
 			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.evie",
+					"name": "constant.character.escape.Evie",
 					"match": "\\\\."
 				}
 			]
 		},
-		"comments": {
+		"functions": {
 			"patterns": [{
-				"name": "comment.line",
-				"match": "#.*"
 			}]
 		}
 	},
-	"scopeName": "source.Evie"
+	"scopeName": "source.evie"
 }

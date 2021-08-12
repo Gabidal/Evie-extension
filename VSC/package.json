@@ -1,0 +1,61 @@
+{
+    "name": "evie",
+    "displayName": "Evie",
+    "description": "Return to the monke",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.59.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "activationEvents": [
+		"onLanguage:vivid"
+	],
+    "main": "./out/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "Evie",
+                "aliases": [
+                    "Evie",
+                    "Evie"
+                ],
+                "extensions": [
+                    ".e"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "Evie",
+                "scopeName": "source.evie",
+                "path": "./syntaxes/Evie.tmLanguage.json"
+            }
+        ],
+        "commands": [
+			{
+				"command": "extension.hello",
+				"title": "Say hello!"
+			}
+		]
+    },
+    "dependencies": {
+        "vscode": "^1.1.37"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "lint": "eslint . --ext .ts,.tsx",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/node": "^12.12.0",
+        "@types/vscode": "^1.34.0",
+        "@typescript-eslint/eslint-plugin": "^4.16.0",
+        "@typescript-eslint/parser": "^4.16.0",
+        "eslint": "^7.21.0",
+        "typescript": "^4.3.5"
+    }
+}
