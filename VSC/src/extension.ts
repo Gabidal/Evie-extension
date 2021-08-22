@@ -14,6 +14,16 @@ enum RequestType {
 	FindReferences
 }
 
+enum MSG_Type {
+	NORMAL,
+	ERROR,
+	WARNING,
+	SOLUTION,
+	INFO,
+	FAIL,
+	SUCCESS,
+}
+
 class Position{
     Line: number = 0
     Character: number = 0
@@ -73,6 +83,50 @@ class Socket_Handle{
 	}
 }
 
+class Wellfare{
+	public SuccessMessage: number
+	public Elements: string
+
+	constructor(SuccessMessage: string, Elements: string){
+		this.Elements = Elements;
+		this.SuccessMessage = parseInt(SuccessMessage);
+	}
+}
+
+class Send_Text_To_Evie implements vscode.CompletionItemProvider{
+	private Handle: Socket_Handle
+
+
+	constructor(H: Socket_Handle) {
+		this.Handle = H
+	}
+
+	public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _: vscode.CancellationToken) : Promise<vscode.CompletionItem[]> {
+		// Send the current state of the document to the compiler service, which will analyze it
+		//Yeah what he says.
+		this.Handle.Send(RequestType.Completions, document, position)
+
+		return this.Handle.Response()
+			//change the raw response data into a json object
+			.then(response => JSON.parse(response) as Wellfare)
+			.then(response => {
+				if (response.SuccessMessage == MSG_Type.SUCCESS) {
+					return JSON.parse(response.Elements) as { Identifier: string /*, Type: number*/ }[]
+				}
+				
+				//if it is not a success but still has been returned an element table tell the user.
+				if (response.Elements.length > 0) {
+					vscode.window.showErrorMessage(response.Elements)
+				}
+				
+				// Return an empty array of completion items, since no items could be produced
+				//Yeah what he says.
+				return []
+			})
+			.then(items => items.map(i => new vscode.CompletionItem(i.Identifier/*, i.Type*/)))
+	}
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Intellisense Starting...')
 	Start_Evie(context)
@@ -94,13 +148,19 @@ function Start_Evie_Service(context: vscode.ExtensionContext, Port: string){
 
 	const Private_Port = parseInt(Port)
 	const Private_Socket = createSocket('udp4')
-	const Diagnostics_Socket = createSocket('udp4')
+	//const Diagnostics_Socket = createSocket('udp4')
 	
 	const Private_Handler = new Socket_Handle(Private_Socket, Private_Port)
-	const Diagnostics_Handler = new Socket_Handle(Diagnostics_Socket, Private_Port)
+	//const Diagnostics_Handler = new Socket_Handle(Diagnostics_Socket, Private_Port)
 
 	const Folder = vscode.workspace.workspaceFolders![0].uri.toString();
 	Private_Handler.Open(Folder)
 
-	
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
+		{ language: 'Evie' },
+		new Send_Text_To_Evie(Private_Handler),
+		'.', 
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+	))
 }
