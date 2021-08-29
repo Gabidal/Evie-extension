@@ -1,4 +1,4 @@
-import { createSocket, RemoteInfo, Socket, SocketType } from 'dgram';
+import { Socket } from 'net';
 import * as vscode from 'vscode'
 import { SignatureHelp } from 'vscode';
 import { SignatureInformation } from 'vscode';
@@ -49,16 +49,24 @@ class Socket_Handle{
 		this.port = port
 	}
 
+	public async Connect(){
+		return await new Promise<void>((resolve, reject) => {
+			this.socket.connect(this.port, "localhost", () => {
+				resolve()
+			})
+		})
+	}
+
 	public Send(request: RequestType, document: vscode.TextDocument, position: vscode.Position) {
 		const payload = JSON.stringify({ Type: request as number, Uri: document.uri.toString(), Document: document.getText(), Position: new Position(position, document.uri.path) });
 		
 		const Bytes = new Uint32Array(1)
 
-		Bytes[0] = payload.length;
+		Bytes[0] = payload.length
 
-		this.socket.send(new Uint8Array(Bytes), this.port, "localhost");
+		this.socket.write(new Uint8Array(Bytes))
 		
-		this.socket.send(payload, this.port, "localhost")
+		this.socket.write(payload)
 	}
 
 	public Open(folder: string) {
@@ -66,17 +74,17 @@ class Socket_Handle{
 		
 		const Bytes = new Uint32Array(1)
 
-		Bytes[0] = payload.length;
+		Bytes[0] = payload.length
 
-		this.socket.send(new Uint8Array(Bytes), this.port, "localhost");
+		this.socket.write(new Uint8Array(Bytes.buffer))
 		
-		this.socket.send(payload, this.port, "localhost")
+		this.socket.write(payload)
 		return this.Response()
 	}
 
 	public Response() {
 		return new Promise<string>((resolve) => {
-			this.socket.once('message', (data: Buffer, _: RemoteInfo) => {
+			this.socket.once('data', (data: Buffer) => {
 				resolve(data.toString('utf-8'))
 			})
 		})
@@ -129,7 +137,8 @@ class Send_Text_To_Evie implements vscode.CompletionItemProvider{
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Intellisense Starting...')
-	Start_Evie(context)
+	//Start_Evie(context)
+	Start_Evie_Service(context, "1111")
 }
 
 function Start_Evie(context: vscode.ExtensionContext){
@@ -138,19 +147,25 @@ function Start_Evie(context: vscode.ExtensionContext){
 	if (service.pid == undefined)
 		vscode.window.showErrorMessage("Error while loading Evie as a service.")
 
+	service.on("exit", (code: number) => {
+		vscode.window.showErrorMessage(`Evie has shutten downed ${code}`)
+	})
+
 	service.stdout.on('data', (data: Buffer) => {
 		const output = data.toString('utf-8')
 		Start_Evie_Service(context, output)
 	})
 }
 
-function Start_Evie_Service(context: vscode.ExtensionContext, Port: string){
+async function Start_Evie_Service(context: vscode.ExtensionContext, Port: string){
 
 	const Private_Port = parseInt(Port)
-	const Private_Socket = createSocket('udp4')
+	const Private_Socket = new Socket()
 	//const Diagnostics_Socket = createSocket('udp4')
 	
 	const Private_Handler = new Socket_Handle(Private_Socket, Private_Port)
+
+	await Private_Handler.Connect();
 	//const Diagnostics_Handler = new Socket_Handle(Diagnostics_Socket, Private_Port)
 
 	const Folder = vscode.workspace.workspaceFolders![0].uri.toString();

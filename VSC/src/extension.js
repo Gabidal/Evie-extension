@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = void 0;
-const net_1 = require("net");
-const vscode = require("vscode");
+var dgram_1 = require("dgram");
+var vscode = require("vscode");
 var RequestType;
 (function (RequestType) {
     RequestType[RequestType["NONE"] = 0] = "NONE";
@@ -24,8 +24,8 @@ var MSG_Type;
     MSG_Type[MSG_Type["FAIL"] = 5] = "FAIL";
     MSG_Type[MSG_Type["SUCCESS"] = 6] = "SUCCESS";
 })(MSG_Type || (MSG_Type = {}));
-class Position {
-    constructor(position, FileName) {
+var Position = /** @class */ (function () {
+    function Position(position, FileName) {
         this.Line = 0;
         this.Character = 0;
         this.Local = 0;
@@ -37,60 +37,57 @@ class Position {
         this.Absolute = 0;
         this.File_Name = FileName;
     }
-}
-class Socket_Handle {
-    constructor(socket, port) {
+    return Position;
+}());
+var Socket_Handle = /** @class */ (function () {
+    function Socket_Handle(socket, port) {
         this.socket = socket;
         this.port = port;
     }
-    async Connect() {
-        return await new Promise((resolve, reject) => {
-            this.socket.connect(this.port, "localhost", () => {
-                resolve();
-            });
-        });
-    }
-    Send(request, document, position) {
-        const payload = JSON.stringify({ Type: request, Uri: document.uri.toString(), Document: document.getText(), Position: new Position(position, document.uri.path) });
-        const Bytes = new Uint32Array(1);
+    Socket_Handle.prototype.Send = function (request, document, position) {
+        var payload = JSON.stringify({ Type: request, Uri: document.uri.toString(), Document: document.getText(), Position: new Position(position, document.uri.path) });
+        var Bytes = new Uint32Array(1);
         Bytes[0] = payload.length;
-        this.socket.write(new Uint8Array(Bytes));
-        this.socket.write(payload);
-    }
-    Open(folder) {
-        const payload = JSON.stringify({ Type: RequestType.Open, Uri: folder, Document: '', Position: { Line: -1, Character: -1 } });
-        const Bytes = new Uint32Array(1);
+        this.socket.send(new Uint8Array(Bytes), this.port, "localhost");
+        this.socket.send(payload, this.port, "localhost");
+    };
+    Socket_Handle.prototype.Open = function (folder) {
+        var payload = JSON.stringify({ Type: RequestType.Open, Uri: folder, Document: '', Position: { Line: -1, Character: -1 } });
+        var Bytes = new Uint32Array(1);
         Bytes[0] = payload.length;
-        this.socket.write(new Uint8Array(Bytes.buffer));
-        this.socket.write(payload);
+        this.socket.send(new Uint8Array(Bytes), this.port, "localhost");
+        this.socket.send(payload, this.port, "localhost");
         return this.Response();
-    }
-    Response() {
-        return new Promise((resolve) => {
-            this.socket.once('data', (data) => {
+    };
+    Socket_Handle.prototype.Response = function () {
+        var _this = this;
+        return new Promise(function (resolve) {
+            _this.socket.once('message', function (data, _) {
                 resolve(data.toString('utf-8'));
             });
         });
-    }
-}
-class Wellfare {
-    constructor(SuccessMessage, Elements) {
+    };
+    return Socket_Handle;
+}());
+var Wellfare = /** @class */ (function () {
+    function Wellfare(SuccessMessage, Elements) {
         this.Elements = Elements;
         this.SuccessMessage = parseInt(SuccessMessage);
     }
-}
-class Send_Text_To_Evie {
-    constructor(H) {
+    return Wellfare;
+}());
+var Send_Text_To_Evie = /** @class */ (function () {
+    function Send_Text_To_Evie(H) {
         this.Handle = H;
     }
-    provideCompletionItems(document, position, _) {
+    Send_Text_To_Evie.prototype.provideCompletionItems = function (document, position, _) {
         // Send the current state of the document to the compiler service, which will analyze it
         //Yeah what he says.
         this.Handle.Send(RequestType.Completions, document, position);
         return this.Handle.Response()
             //change the raw response data into a json object
-            .then(response => JSON.parse(response))
-            .then(response => {
+            .then(function (response) { return JSON.parse(response); })
+            .then(function (response) {
             if (response.SuccessMessage == MSG_Type.SUCCESS) {
                 return JSON.parse(response.Elements);
             }
@@ -102,35 +99,31 @@ class Send_Text_To_Evie {
             //Yeah what he says.
             return [];
         })
-            .then(items => items.map(i => new vscode.CompletionItem(i.Identifier /*, i.Type*/)));
-    }
-}
+            .then(function (items) { return items.map(function (i) { return new vscode.CompletionItem(i.Identifier /*, i.Type*/); }); });
+    };
+    return Send_Text_To_Evie;
+}());
 function activate(context) {
     console.log('Intellisense Starting...');
-    //Start_Evie(context)
-    Start_Evie_Service(context, "1111");
+    Start_Evie(context);
 }
 exports.activate = activate;
 function Start_Evie(context) {
-    const service = require('child_process').spawn('Evie.exe', ['-service']);
+    var service = require('child_process').spawn('Evie.exe', ['-service']);
     if (service.pid == undefined)
         vscode.window.showErrorMessage("Error while loading Evie as a service.");
-    service.on("exit", (code) => {
-        vscode.window.showErrorMessage(`Evie has shutten downed ${code}`);
-    });
-    service.stdout.on('data', (data) => {
-        const output = data.toString('utf-8');
+    service.stdout.on('data', function (data) {
+        var output = data.toString('utf-8');
         Start_Evie_Service(context, output);
     });
 }
-async function Start_Evie_Service(context, Port) {
-    const Private_Port = parseInt(Port);
-    const Private_Socket = new net_1.Socket();
+function Start_Evie_Service(context, Port) {
+    var Private_Port = parseInt(Port);
+    var Private_Socket = dgram_1.createSocket('udp4');
     //const Diagnostics_Socket = createSocket('udp4')
-    const Private_Handler = new Socket_Handle(Private_Socket, Private_Port);
-    await Private_Handler.Connect();
+    var Private_Handler = new Socket_Handle(Private_Socket, Private_Port);
     //const Diagnostics_Handler = new Socket_Handle(Diagnostics_Socket, Private_Port)
-    const Folder = vscode.workspace.workspaceFolders[0].uri.toString();
+    var Folder = vscode.workspace.workspaceFolders[0].uri.toString();
     Private_Handler.Open(Folder);
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: 'Evie' }, new Send_Text_To_Evie(Private_Handler), '.', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'));
 }
