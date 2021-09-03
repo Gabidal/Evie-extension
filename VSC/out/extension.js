@@ -25,17 +25,30 @@ var MSG_Type;
     MSG_Type[MSG_Type["SUCCESS"] = 6] = "SUCCESS";
 })(MSG_Type || (MSG_Type = {}));
 class Position {
-    constructor(position, FileName) {
+    constructor() {
         this.Line = 0;
         this.Character = 0;
         this.Local = 0;
         this.Absolute = 0;
         this.File_Name = "";
-        this.Line = position.line;
-        this.Character = position.character;
-        this.Local = 0;
-        this.Absolute = 0;
-        this.File_Name = FileName;
+    }
+    static init1(position, FileName) {
+        var Result = new Position();
+        Result.Line = position.line;
+        Result.Character = position.character;
+        Result.Local = 0;
+        Result.Absolute = 0;
+        Result.File_Name = FileName;
+        return Result;
+    }
+    static init2(line, character) {
+        var Result = new Position();
+        Result.Line = line;
+        Result.Character = character;
+        Result.Local = 0;
+        Result.Absolute = 0;
+        Result.File_Name = "";
+        return Result;
     }
 }
 class Socket_Handle {
@@ -51,14 +64,18 @@ class Socket_Handle {
         });
     }
     Send(request, document, position) {
-        const payload = JSON.stringify({ Type: request, Uri: document.uri.toString(), Document: document.getText(), Position: new Position(position, document.uri.path) });
-        const Bytes = new Uint32Array(1);
-        Bytes[0] = payload.length;
-        this.socket.write(new Uint8Array(Bytes));
+        var payload = JSON.stringify({ Type: request, Uri: document.uri.toString(), /*Document: document.getText(),*/ Position: Position.init1(position, document.uri.path) });
+        payload += "{" + document.getText() + "}";
+        const Bytes = new Uint8Array(4);
+        Bytes[0] = payload.length & 0xFF;
+        Bytes[1] = (payload.length & 0xFF00) >> 8;
+        Bytes[2] = (payload.length & 0xFF0000) >> 16;
+        Bytes[3] = (payload.length & 0xFF000000) >> 24;
+        this.socket.write(Bytes);
         this.socket.write(payload);
     }
     Open(folder) {
-        const payload = JSON.stringify({ Type: RequestType.Open, Uri: folder, Document: '', Position: { Line: -1, Character: -1 } });
+        const payload = JSON.stringify({ Type: RequestType.Open, Uri: folder, Document: '', Position: Position.init2(-1, -1) });
         const Bytes = new Uint32Array(1);
         Bytes[0] = payload.length;
         this.socket.write(new Uint8Array(Bytes.buffer));
@@ -74,9 +91,9 @@ class Socket_Handle {
     }
 }
 class Wellfare {
-    constructor(SuccessMessage, Elements) {
+    constructor(Status, Elements) {
         this.Elements = Elements;
-        this.SuccessMessage = parseInt(SuccessMessage);
+        this.Status = parseInt(Status);
     }
 }
 class Send_Text_To_Evie {
@@ -89,9 +106,11 @@ class Send_Text_To_Evie {
         this.Handle.Send(RequestType.Completions, document, position);
         return this.Handle.Response()
             //change the raw response data into a json object
-            .then(response => JSON.parse(response))
             .then(response => {
-            if (response.SuccessMessage == MSG_Type.SUCCESS) {
+            return JSON.parse(response);
+        })
+            .then(response => {
+            if (response.Status == MSG_Type.SUCCESS) {
                 return JSON.parse(response.Elements);
             }
             //if it is not a success but still has been returned an element table tell the user.
@@ -102,13 +121,17 @@ class Send_Text_To_Evie {
             //Yeah what he says.
             return [];
         })
-            .then(items => items.map(i => new vscode.CompletionItem(i.Identifier /*, i.Type*/)));
+            .then(items => items.map(i => new vscode.CompletionItem(i /*, i.Type*/, vscode.CompletionItemKind.Variable)))
+            .catch(error => {
+            console.log(error);
+            return [];
+        });
     }
 }
 function activate(context) {
     console.log('Intellisense Starting...');
-    //Start_Evie(context)
-    Start_Evie_Service(context, "1111");
+    Start_Evie(context);
+    //Start_Evie_Service(context, "1111")
 }
 exports.activate = activate;
 function Start_Evie(context) {

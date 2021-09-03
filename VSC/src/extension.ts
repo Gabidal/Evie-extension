@@ -30,13 +30,29 @@ class Position{
     Local: number = 0
     Absolute: number = 0
     File_Name: string = ""
+	
+	public static init1(position: vscode.Position, FileName: string){
+		var Result = new Position()
 
-	constructor(position: vscode.Position, FileName: string){
-		this.Line = position.line;
-		this.Character = position.character;
-		this.Local = 0;
-		this.Absolute = 0;
-		this.File_Name = FileName;
+		Result.Line = position.line;
+		Result.Character = position.character;
+		Result.Local = 0;
+		Result.Absolute = 0;
+		Result.File_Name = FileName;
+
+		return Result
+	}
+
+	public static init2(line: number, character: number){
+		var Result = new Position()
+
+		Result.Line = line;
+		Result.Character = character;
+		Result.Local = 0;
+		Result.Absolute = 0;
+		Result.File_Name = "";
+
+		return Result;
 	}
 }
 
@@ -58,19 +74,24 @@ class Socket_Handle{
 	}
 
 	public Send(request: RequestType, document: vscode.TextDocument, position: vscode.Position) {
-		const payload = JSON.stringify({ Type: request as number, Uri: document.uri.toString(), Document: document.getText(), Position: new Position(position, document.uri.path) });
+		var payload = JSON.stringify({ Type: request as number, Uri: document.uri.toString(), /*Document: document.getText(),*/ Position: Position.init1(position, document.uri.path) });
 		
-		const Bytes = new Uint32Array(1)
+		payload += "{" + document.getText() + "}";
 
-		Bytes[0] = payload.length
+		const Bytes = new Uint8Array(4)
 
-		this.socket.write(new Uint8Array(Bytes))
+		Bytes[0] = payload.length & 0xFF
+		Bytes[1] = (payload.length & 0xFF00) >> 8
+		Bytes[2] = (payload.length & 0xFF0000) >> 16
+		Bytes[3] = (payload.length & 0xFF000000) >> 24
+
+		this.socket.write(Bytes)
 		
 		this.socket.write(payload)
 	}
 
 	public Open(folder: string) {
-		const payload = JSON.stringify({ Type: RequestType.Open as number, Uri: folder, Document: '', Position: { Line: -1, Character: -1 } })
+		const payload = JSON.stringify({ Type: RequestType.Open as number, Uri: folder, Document: '', Position: Position.init2(-1, -1) })
 		
 		const Bytes = new Uint32Array(1)
 
@@ -92,12 +113,12 @@ class Socket_Handle{
 }
 
 class Wellfare{
-	public SuccessMessage: number
+	public Status: number
 	public Elements: string
 
-	constructor(SuccessMessage: string, Elements: string){
+	constructor(Status: string, Elements: string){
 		this.Elements = Elements;
-		this.SuccessMessage = parseInt(SuccessMessage);
+		this.Status = parseInt(Status);
 	}
 }
 
@@ -116,10 +137,12 @@ class Send_Text_To_Evie implements vscode.CompletionItemProvider{
 
 		return this.Handle.Response()
 			//change the raw response data into a json object
-			.then(response => JSON.parse(response) as Wellfare)
 			.then(response => {
-				if (response.SuccessMessage == MSG_Type.SUCCESS) {
-					return JSON.parse(response.Elements) as { Identifier: string /*, Type: number*/ }[]
+				return JSON.parse(response) as Wellfare
+			})
+			.then(response => {
+				if (response.Status == MSG_Type.SUCCESS) {
+					return JSON.parse(response.Elements) as string[]
 				}
 				
 				//if it is not a success but still has been returned an element table tell the user.
@@ -131,14 +154,18 @@ class Send_Text_To_Evie implements vscode.CompletionItemProvider{
 				//Yeah what he says.
 				return []
 			})
-			.then(items => items.map(i => new vscode.CompletionItem(i.Identifier/*, i.Type*/)))
+			.then(items => items.map(i => new vscode.CompletionItem(i/*, i.Type*/, vscode.CompletionItemKind.Variable)))
+			.catch(error => {
+				console.log(error)
+				return []
+			})
 	}
 }
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Intellisense Starting...')
-	//Start_Evie(context)
-	Start_Evie_Service(context, "1111")
+	Start_Evie(context)
+	//Start_Evie_Service(context, "1111")
 }
 
 function Start_Evie(context: vscode.ExtensionContext){
@@ -169,6 +196,7 @@ async function Start_Evie_Service(context: vscode.ExtensionContext, Port: string
 	//const Diagnostics_Handler = new Socket_Handle(Diagnostics_Socket, Private_Port)
 
 	const Folder = vscode.workspace.workspaceFolders![0].uri.toString();
+
 	Private_Handler.Open(Folder)
 
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
@@ -179,3 +207,4 @@ async function Start_Evie_Service(context: vscode.ExtensionContext, Port: string
 		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
 	))
 }
+
