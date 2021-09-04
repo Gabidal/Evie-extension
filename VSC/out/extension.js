@@ -130,8 +130,8 @@ class Send_Text_To_Evie {
 }
 function activate(context) {
     console.log('Intellisense Starting...');
-    Start_Evie(context);
-    //Start_Evie_Service(context, "1111")
+    //Start_Evie(context)
+    Start_Evie_Service(context, "1111");
 }
 exports.activate = activate;
 function Start_Evie(context) {
@@ -155,6 +155,6 @@ async function Start_Evie_Service(context, Port) {
     //const Diagnostics_Handler = new Socket_Handle(Diagnostics_Socket, Private_Port)
     const Folder = vscode.workspace.workspaceFolders[0].uri.toString();
     Private_Handler.Open(Folder);
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: 'Evie' }, new Send_Text_To_Evie(Private_Handler), '.', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: 'Evie' }, new Send_Text_To_Evie(Private_Handler), '.', '->', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'));
 }
 //# sourceMappingURL=extension.js.map
