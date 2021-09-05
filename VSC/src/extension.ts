@@ -164,8 +164,8 @@ class Send_Text_To_Evie implements vscode.CompletionItemProvider{
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Intellisense Starting...')
-	//Start_Evie(context)
-	Start_Evie_Service(context, "1111")
+	Start_Evie(context)
+	//Start_Evie_Service(context, "1111")
 }
 
 function Start_Evie(context: vscode.ExtensionContext){
