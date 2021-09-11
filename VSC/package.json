@@ -38,6 +38,10 @@
             {
                 "command": "extension.hello",
                 "title": "Say hello!"
+            },
+            {
+                "command": "Haloo",
+                "title": "Haloo?"
             }
         ]
     },

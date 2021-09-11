@@ -13,6 +13,7 @@ var RequestType;
     RequestType[RequestType["Definition"] = 5] = "Definition";
     RequestType[RequestType["Information"] = 6] = "Information";
     RequestType[RequestType["FindReferences"] = 7] = "FindReferences";
+    RequestType[RequestType["Asm"] = 8] = "Asm";
 })(RequestType || (RequestType = {}));
 var MSG_Type;
 (function (MSG_Type) {
@@ -128,6 +129,18 @@ class Send_Text_To_Evie {
         });
     }
 }
+function Send_Asm_generation_Code(Code) {
+    const Provider = new (class {
+        provideTextDocumentContent(uri) {
+            return "mov eax, rcx";
+        }
+    })();
+    vscode.workspace.registerTextDocumentContentProvider("asm:", Provider);
+    vscode.commands.registerCommand("Haloo", async () => {
+        const Document = await vscode.workspace.openTextDocument("asm:filename");
+        await vscode.window.showTextDocument(Document);
+    });
+}
 function activate(context) {
     console.log('Intellisense Starting...');
     Start_Evie(context);
@@ -155,6 +168,36 @@ async function Start_Evie_Service(context, Port) {
     //const Diagnostics_Handler = new Socket_Handle(Diagnostics_Socket, Private_Port)
     const Folder = vscode.workspace.workspaceFolders[0].uri.toString();
     Private_Handler.Open(Folder);
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: 'Evie' }, new Send_Text_To_Evie(Private_Handler), '.', '->', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'));
+    const Provider = new (class {
+        constructor() {
+            this.onDidChangeEmitter = new vscode.EventEmitter();
+            this.onDidChange = this.onDidChangeEmitter.event;
+        }
+        provideTextDocumentContent(uri) {
+            const Find = vscode.workspace.textDocuments.find((i) => {
+                if (i.uri.fsPath == uri.fsPath)
+                    return i;
+            });
+            if (Find == undefined) {
+                vscode.window.showErrorMessage("Ei toimi :/");
+            }
+            Private_Handler.Send(RequestType.Asm, Find, new vscode.Position(0, 0));
+            return Private_Handler.Response().then(response => {
+                return JSON.parse(response);
+            }).then(wellfare => {
+                return wellfare.Elements.slice(2, wellfare.Elements.length - 2);
+            }).catch((E) => {
+                return "";
+            });
+        }
+    })();
+    vscode.workspace.registerTextDocumentContentProvider("asm", Provider);
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: 'Evie' }, new Send_Text_To_Evie(Private_Handler), '.', '->', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'), vscode.workspace.onDidSaveTextDocument(async (e) => {
+        const File = vscode.Uri.parse("asm:" + e.uri.fsPath);
+        Provider.onDidChangeEmitter.fire(File);
+        //const Document = await vscode.workspace.openTextDocument({language: "asm-intel-x86-generic", content: Result.slice(2, Result.length - 2)})
+        const Documet = (await vscode.window.showTextDocument(File, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true })).document;
+        vscode.languages.setTextDocumentLanguage(Documet, "asm-intel-x86-generic");
+    }));
 }
 //# sourceMappingURL=extension.js.map

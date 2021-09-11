@@ -11,7 +11,8 @@ enum RequestType {
 	Open,
 	Definition,
 	Information,
-	FindReferences
+	FindReferences,
+	Asm
 }
 
 enum MSG_Type {
@@ -162,6 +163,22 @@ class Send_Text_To_Evie implements vscode.CompletionItemProvider{
 	}
 }
 
+function Send_Asm_generation_Code(Code: vscode.TextDocument){
+	const Provider = new (class implements vscode.TextDocumentContentProvider {
+		provideTextDocumentContent(uri: vscode.Uri): string {
+			return "mov eax, rcx"
+		}
+	})();
+
+	vscode.workspace.registerTextDocumentContentProvider("asm:", Provider)
+
+	vscode.commands.registerCommand("Haloo", async () => {
+		const Document = await vscode.workspace.openTextDocument("asm:filename")
+		await vscode.window.showTextDocument(Document)
+	} )
+
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Intellisense Starting...')
 	Start_Evie(context)
@@ -199,12 +216,59 @@ async function Start_Evie_Service(context: vscode.ExtensionContext, Port: string
 
 	Private_Handler.Open(Folder)
 
-	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(
-		{ language: 'Evie' },
-		new Send_Text_To_Evie(Private_Handler),
-		'.', '->',
-		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
-	))
+	const Provider = new (class implements vscode.TextDocumentContentProvider {
+		provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
+			const Find = vscode.workspace.textDocuments.find((i)=> {
+				if (i.uri.fsPath == uri.fsPath)
+					return i
+			})
+
+			if (Find == undefined){
+				vscode.window.showErrorMessage("Ei toimi :/");
+			}
+
+			Private_Handler.Send(RequestType.Asm, Find!, new vscode.Position(0, 0))
+
+			return Private_Handler.Response().then(response => {
+				return JSON.parse(response) as Wellfare
+			}).then(wellfare =>{
+				return wellfare.Elements.slice(2, wellfare.Elements.length - 2)
+			}).catch((E) => {
+				return ""
+			})
+		}
+		onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+  		onDidChange = this.onDidChangeEmitter.event;
+	})();
+
+	vscode.workspace.registerTextDocumentContentProvider("asm", Provider)
+
+	context.subscriptions.push(
+
+		vscode.languages.registerCompletionItemProvider(
+			{ language: 'Evie' },
+			new Send_Text_To_Evie(Private_Handler),
+			'.', '->',
+			'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+		),
+
+		vscode.workspace.onDidSaveTextDocument( async (e) => {
+
+			const File = vscode.Uri.parse("asm:" + e.uri.fsPath)
+
+			Provider.onDidChangeEmitter.fire(File)
+
+			//const Document = await vscode.workspace.openTextDocument({language: "asm-intel-x86-generic", content: Result.slice(2, Result.length - 2)})
+
+			const Documet = (await vscode.window.showTextDocument(File, {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true})).document
+
+			vscode.languages.setTextDocumentLanguage(Documet, "asm-intel-x86-generic")
+		})
+
+	)
+
+
+
 }
 
