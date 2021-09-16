@@ -31,7 +31,7 @@
             {
                 "language": "Evie",
                 "scopeName": "source.evie",
-                "path": "./syntaxes/Evie.tmLanguage.json"
+                "path": "./syntaxes/Evie.tmLanguage"
             }
         ],
         "commands": [

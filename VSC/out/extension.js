@@ -153,6 +153,8 @@ function Start_Evie(context) {
         vscode.window.showErrorMessage("Error while loading Evie as a service.");
     service.on("exit", (code) => {
         vscode.window.showErrorMessage(`Evie has shutten downed ${code}`);
+        setTimeout(() => Start_Evie(context), 1000);
+        return;
     });
     service.stdout.on('data', (data) => {
         const output = data.toString('utf-8');

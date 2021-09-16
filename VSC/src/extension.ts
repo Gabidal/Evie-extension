@@ -126,7 +126,6 @@ class Wellfare{
 class Send_Text_To_Evie implements vscode.CompletionItemProvider{
 	private Handle: Socket_Handle
 
-
 	constructor(H: Socket_Handle) {
 		this.Handle = H
 	}
@@ -193,6 +192,8 @@ function Start_Evie(context: vscode.ExtensionContext){
 
 	service.on("exit", (code: number) => {
 		vscode.window.showErrorMessage(`Evie has shutten downed ${code}`)
+		setTimeout(() => Start_Evie(context), 1000)
+		return;
 	})
 
 	service.stdout.on('data', (data: Buffer) => {

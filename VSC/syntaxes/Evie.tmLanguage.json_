@@ -23,15 +23,15 @@
 			"name": "string.quoted.double.Evie",
 			"begin": "\"",
 			"end": "\"",
-			"patterns": [
-				{
+			"patterns": [{
 					"name": "constant.character.escape.Evie",
 					"match": "\\\\."
-				}
-			]
+				}]
 		},
 		"functions": {
 			"patterns": [{
+				"name": "entity.name.function",
+				"match": ""
 			}]
 		}
 	},
