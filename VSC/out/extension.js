@@ -143,8 +143,8 @@ function Send_Asm_generation_Code(Code) {
 }
 function activate(context) {
     console.log('Intellisense Starting...');
-    Start_Evie(context);
-    //Start_Evie_Service(context, "1111")
+    //Start_Evie(context)
+    Start_Evie_Service(context, "1111");
 }
 exports.activate = activate;
 function Start_Evie(context) {

@@ -180,8 +180,8 @@ function Send_Asm_generation_Code(Code: vscode.TextDocument){
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Intellisense Starting...')
-	Start_Evie(context)
-	//Start_Evie_Service(context, "1111")
+	//Start_Evie(context)
+	Start_Evie_Service(context, "1111")
 }
 
 function Start_Evie(context: vscode.ExtensionContext){
