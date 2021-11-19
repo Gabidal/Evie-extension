@@ -178,10 +178,12 @@ function Send_Asm_generation_Code(Code: vscode.TextDocument){
 
 }
 
+var Console = ""
+
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Intellisense Starting...')
-	//Start_Evie(context)
-	Start_Evie_Service(context, "1111")
+	Start_Evie(context)
+	//Start_Evie_Service(context, "1111")
 }
 
 function Start_Evie(context: vscode.ExtensionContext){
@@ -198,7 +200,20 @@ function Start_Evie(context: vscode.ExtensionContext){
 
 	service.stdout.on('data', (data: Buffer) => {
 		const output = data.toString('utf-8')
-		Start_Evie_Service(context, output)
+
+		var NewLine_Count = 0;
+		for (var i = 0; i < output.length; i++) {
+			if (output[i] == '\n') {
+				NewLine_Count++;
+			}
+		}
+
+		if (NewLine_Count == 1){
+			Start_Evie_Service(context, output)
+		}
+		else{
+			Console += output;
+		}
 	})
 }
 
@@ -217,7 +232,7 @@ async function Start_Evie_Service(context: vscode.ExtensionContext, Port: string
 
 	Private_Handler.Open(Folder)
 
-	const Provider = new (class implements vscode.TextDocumentContentProvider {
+	const Asm_Provider = new (class implements vscode.TextDocumentContentProvider {
 		provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
 			const Find = vscode.workspace.textDocuments.find((i)=> {
 				if (i.uri.fsPath == uri.fsPath)
@@ -242,7 +257,22 @@ async function Start_Evie_Service(context: vscode.ExtensionContext, Port: string
   		onDidChange = this.onDidChangeEmitter.event;
 	})();
 
-	vscode.workspace.registerTextDocumentContentProvider("asm", Provider)
+
+	vscode.workspace.registerTextDocumentContentProvider("asm", Asm_Provider)	
+	
+	
+	//make a new provider that outputs the standard output of the compiler service to a new window that is below the current one.
+	//This new Output_Provider will save the standard output and show it to the user when a onDidSaveTextDocument event is fired.
+	const Output_Provider = new (class implements vscode.TextDocumentContentProvider {
+		provideTextDocumentContent(uri: vscode.Uri): string {
+			//get the standard output from 
+			return Console;
+		}
+		onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+  		onDidChange = this.onDidChangeEmitter.event;
+	})();
+	
+	vscode.workspace.registerTextDocumentContentProvider("Console", Output_Provider)	
 
 	context.subscriptions.push(
 
@@ -256,15 +286,26 @@ async function Start_Evie_Service(context: vscode.ExtensionContext, Port: string
 
 		vscode.workspace.onDidSaveTextDocument( async (e) => {
 
-			const File = vscode.Uri.parse("asm:" + e.uri.fsPath)
+			const Asm_File = vscode.Uri.parse("asm:" + e.uri.fsPath)
+			
+			const Output_File = vscode.Uri.parse("Console:" + e.uri.fsPath)
 
-			Provider.onDidChangeEmitter.fire(File)
+			Console = ""
+
+			Asm_Provider.onDidChangeEmitter.fire(Asm_File)
+			
+			Output_Provider.onDidChangeEmitter.fire(Output_File)
 
 			//const Document = await vscode.workspace.openTextDocument({language: "asm-intel-x86-generic", content: Result.slice(2, Result.length - 2)})
 
-			const Documet = (await vscode.window.showTextDocument(File, {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true})).document
+			const Asm_Documet = (await vscode.window.showTextDocument(Asm_File, {viewColumn: vscode.ViewColumn.Beside, preserveFocus: true})).document
 
-			vscode.languages.setTextDocumentLanguage(Documet, "asm-intel-x86-generic")
+			vscode.languages.setTextDocumentLanguage(Asm_Documet, "asm-intel-x86-generic")
+
+			//set the visual studio code editor layout to two rows right of the current editor.
+			vscode.commands.executeCommand('workbench.action.editorLayoutTwoRowsRight')
+
+			const Output_Documet = (await vscode.window.showTextDocument(Output_File, {viewColumn: vscode.ViewColumn.Three, preserveFocus: true})).document
 		})
 
 	)

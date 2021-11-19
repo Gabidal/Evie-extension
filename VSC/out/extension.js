@@ -141,10 +141,11 @@ function Send_Asm_generation_Code(Code) {
         await vscode.window.showTextDocument(Document);
     });
 }
+var Console = "";
 function activate(context) {
     console.log('Intellisense Starting...');
-    //Start_Evie(context)
-    Start_Evie_Service(context, "1111");
+    Start_Evie(context);
+    //Start_Evie_Service(context, "1111")
 }
 exports.activate = activate;
 function Start_Evie(context) {
@@ -158,7 +159,18 @@ function Start_Evie(context) {
     });
     service.stdout.on('data', (data) => {
         const output = data.toString('utf-8');
-        Start_Evie_Service(context, output);
+        var NewLine_Count = 0;
+        for (var i = 0; i < output.length; i++) {
+            if (output[i] == '\n') {
+                NewLine_Count++;
+            }
+        }
+        if (NewLine_Count == 1) {
+            Start_Evie_Service(context, output);
+        }
+        else {
+            Console += output;
+        }
     });
 }
 async function Start_Evie_Service(context, Port) {
@@ -170,7 +182,7 @@ async function Start_Evie_Service(context, Port) {
     //const Diagnostics_Handler = new Socket_Handle(Diagnostics_Socket, Private_Port)
     const Folder = vscode.workspace.workspaceFolders[0].uri.toString();
     Private_Handler.Open(Folder);
-    const Provider = new (class {
+    const Asm_Provider = new (class {
         constructor() {
             this.onDidChangeEmitter = new vscode.EventEmitter();
             this.onDidChange = this.onDidChangeEmitter.event;
@@ -193,13 +205,32 @@ async function Start_Evie_Service(context, Port) {
             });
         }
     })();
-    vscode.workspace.registerTextDocumentContentProvider("asm", Provider);
+    vscode.workspace.registerTextDocumentContentProvider("asm", Asm_Provider);
+    //make a new provider that outputs the standard output of the compiler service to a new window that is below the current one.
+    //This new Output_Provider will save the standard output and show it to the user when a onDidSaveTextDocument event is fired.
+    const Output_Provider = new (class {
+        constructor() {
+            this.onDidChangeEmitter = new vscode.EventEmitter();
+            this.onDidChange = this.onDidChangeEmitter.event;
+        }
+        provideTextDocumentContent(uri) {
+            //get the standard output from 
+            return Console;
+        }
+    })();
+    vscode.workspace.registerTextDocumentContentProvider("Console", Output_Provider);
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider({ language: 'Evie' }, new Send_Text_To_Evie(Private_Handler), '.', '->', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'), vscode.workspace.onDidSaveTextDocument(async (e) => {
-        const File = vscode.Uri.parse("asm:" + e.uri.fsPath);
-        Provider.onDidChangeEmitter.fire(File);
+        const Asm_File = vscode.Uri.parse("asm:" + e.uri.fsPath);
+        const Output_File = vscode.Uri.parse("Console:" + e.uri.fsPath);
+        Console = "";
+        Asm_Provider.onDidChangeEmitter.fire(Asm_File);
+        Output_Provider.onDidChangeEmitter.fire(Output_File);
         //const Document = await vscode.workspace.openTextDocument({language: "asm-intel-x86-generic", content: Result.slice(2, Result.length - 2)})
-        const Documet = (await vscode.window.showTextDocument(File, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true })).document;
-        vscode.languages.setTextDocumentLanguage(Documet, "asm-intel-x86-generic");
+        const Asm_Documet = (await vscode.window.showTextDocument(Asm_File, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true })).document;
+        vscode.languages.setTextDocumentLanguage(Asm_Documet, "asm-intel-x86-generic");
+        //set the visual studio code editor layout to two rows right of the current editor.
+        vscode.commands.executeCommand('workbench.action.editorLayoutTwoRowsRight');
+        const Output_Documet = (await vscode.window.showTextDocument(Output_File, { viewColumn: vscode.ViewColumn.Three, preserveFocus: true })).document;
     }));
 }
 //# sourceMappingURL=extension.js.map

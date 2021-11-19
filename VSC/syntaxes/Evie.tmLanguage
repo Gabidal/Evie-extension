@@ -297,7 +297,7 @@
 			<array>
 				<dict>
 					<key>match</key>
-					<string>\b(bool|char|int|short|long|float|double|string|List)\b</string>
+					<string>\b(bool|char|int|short|long|float|double|String|List|std)\b</string>
 					<key>name</key>
 					<string>constant.language.registers.general-purpose</string>
 				</dict>
