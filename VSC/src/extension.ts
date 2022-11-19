@@ -130,7 +130,7 @@ class Send_Text_To_Evie implements vscode.CompletionItemProvider{
 		this.Handle = H
 	}
 
-	public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _: vscode.CancellationToken) : Promise<vscode.CompletionItem[]> {
+	public async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _: vscode.CancellationToken) : Promise<vscode.CompletionItem[]> {
 		// Send the current state of the document to the compiler service, which will analyze it
 		//Yeah what he says.
 		this.Handle.Send(RequestType.Completions, document, position)
@@ -194,7 +194,7 @@ function Start_Evie(context: vscode.ExtensionContext){
 
 	service.on("exit", (code: number) => {
 		vscode.window.showErrorMessage(`Evie has shutten downed ${code}`)
-		setTimeout(() => Start_Evie(context), 1000)
+		setTimeout(() => Start_Evie(context), 100)
 		return;
 	})
 

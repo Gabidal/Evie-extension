@@ -101,7 +101,7 @@ class Send_Text_To_Evie {
     constructor(H) {
         this.Handle = H;
     }
-    provideCompletionItems(document, position, _) {
+    async provideCompletionItems(document, position, _) {
         // Send the current state of the document to the compiler service, which will analyze it
         //Yeah what he says.
         this.Handle.Send(RequestType.Completions, document, position);
@@ -154,7 +154,7 @@ function Start_Evie(context) {
         vscode.window.showErrorMessage("Error while loading Evie as a service.");
     service.on("exit", (code) => {
         vscode.window.showErrorMessage(`Evie has shutten downed ${code}`);
-        setTimeout(() => Start_Evie(context), 1000);
+        setTimeout(() => Start_Evie(context), 100);
         return;
     });
     service.stdout.on('data', (data) => {

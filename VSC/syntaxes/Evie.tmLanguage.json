@@ -1,0 +1,208 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Evie",
+	"patterns": [
+		{ "include": "#calls" },
+		{ "include": "#keywords" },
+		{ "include": "#types" },
+		{ "include": "#template_type" },
+		{ "include": "#comments" },
+		{ "include": "#constants" },
+		{ "include": "#general" }
+	],
+	"repository": {
+		"template_type": {
+			"patterns": [
+				{
+					"match": "(\\w+)\\<([\\w<>,.\\ ]+)\\>",
+					"captures": {
+						"1": {
+							"name": "keyword.control"
+						},
+						"2": {
+							"patterns": [
+								{
+									"include": "$self"
+								},
+								{
+									"match": "\\w+",
+									"name": "keyword.control"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"match": "^\\s*#warning\\ ",
+					"description": "Warning",
+					"name": "invalid.illegal"
+				},
+				{
+					"match": "\\'[^']*\\'",
+					"name": "string.quoted.double"
+				},
+				{
+					"match": "\\\"[^\"]*\\\"",
+					"name": "string.quoted.double"
+				},
+				{
+					"match": "\\`[^`]*\\`",
+					"name": "string.quoted.double"
+				},
+				{
+					"begin": "(^|[^#])###[^#]",
+					"end": "###",
+					"name": "comment.block"
+				},
+				{
+					"match": "#.*",
+					"name": "comment.line"
+				}
+			]
+		},
+		"constants": {
+			"patterns": [
+				{
+					"name": "constant.numeric.floating-point",
+					"match": "\\b((([0-9\\_]+\\.[0-9\\_]*)(e[+-]?[0-9\\_]+)?|\\.?[0-9\\_]+e[+-]?[0-9\\_]+))\\b"
+				},
+				{
+					"name": "constant.numeric.literal",
+					"match": "(\\$0[0-9a-f]+)\\b"
+				},
+				{
+					"name": "constant.numeric.dec",
+					"match": "\\b((0d[0-9\\_]+)|([0-9\\_]+d?))\\b"
+				},
+				{
+					"name": "constant.numeric.hex",
+					"match": "\\b((0[xh][0-9a-fA-F\\_]+)|([0-9a-fA-F\\_]+[hH]))\\b"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control",
+					"description": "Keywords",
+					"match": "\\b(type|func|use|continue|else|export|if|while|ptr|ref|jump|state|const|import|plain|return|static|cpp|evie|vivid|size|format|address|this)\\b"
+				},
+				{
+					"name": "keyword.control",
+					"description": "Standard functions",
+					"match": "\\b(allocate|deallocate|internal_is|internal_init)\\b"
+				}
+			]
+		},
+		"calls": {
+			"patterns": [
+				{
+					"match": "\\.{0,1}(\\w+)\\ *(\\()",
+					"description": "Function call",
+					"captures": {
+						"1": {
+							"name": "entity.name.function"
+						}
+					}
+				},
+				{
+					"match": "((\\w+\\ )+)(\\w+)",
+					"description": "Variable declaration",
+					"captures": {
+						"1": {
+							"name": "keyword.control"
+						},
+						"2": {
+							"name": "keyword.control"
+						},
+                        "3": {
+                            "name": "variable.name"
+                        }
+					}
+				},
+				{
+					"match": "(\\.)(\\w+)",
+					"description": "Member access",
+					"captures": {
+						"1": {
+							"name": "keyword.operator"
+						},
+						"2": {
+							"name": "variable.name"
+						}
+					}
+				},
+                {
+					"match": "(\\w+)(\\.)",
+					"description": "Inversed member access",
+					"captures": {
+						"1": {
+							"name": "keyword.control"
+						},
+						"2": {
+							"name": "keyword.operator"
+						}
+					}
+				}
+			]
+		},
+		"general": {
+			"patterns": [
+				{
+					"match": "((->)(\\w+))|((->)\\(([^\\)\\(]+)\\))",
+					"description": "Cast",
+					"captures": {
+						"2": {
+							"name": "keyword"
+						},
+						"3": {
+							"name": "keyword.control"
+						},
+						"5": {
+							"name": "keyword"
+						},
+                        "6": {
+                            "patterns": [
+								{
+									"include": "#template_type"
+								},
+								{
+									"match": "\\w+",
+									"name": "keyword.control"
+								}
+							]
+                        }
+					}
+				},
+				{
+					"match": "\\!|\\=|\\+|\\-|\\*|\\/|\\%|\\.|\\&|\\||\\¤|\\[|\\]|\\<|\\>|\\<<|\\>>",
+					"description": "Operators",
+					"name": "keyword.operator"
+				}
+			]
+		},
+		"types": {
+			"patterns": [{
+				"match": "\\b(bool|char|short|int|long|float|double|false|true)\\b",
+				"description": "Primitives",
+				"name": "keyword.control"
+			}]
+		},
+		"type_definition": {
+			"patterns": [{
+				"match": "([\\w\\<\\>,.\\ ]+)+\\ *\\n{0,1}\\{",
+				"description": "Type definition",
+				"captures": {
+					"1": {
+						"name": "keyword.control"
+					}
+				}
+			}]
+		}
+	},
+	"scopeName": "source.evie"
+}

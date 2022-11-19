@@ -2,7 +2,7 @@
     "name": "evie",
     "displayName": "Evie",
     "description": "Return to the monke",
-    "version": "3.0.0",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.54.0"
     },
@@ -13,6 +13,11 @@
         "onLanguage:Evie"
     ],
     "main": "./out/extension.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Gabidal/Evie-extension.git"
+    },
+    "publisher": "Gabidal",
     "contributes": {
         "languages": [
             {
@@ -31,17 +36,7 @@
             {
                 "language": "Evie",
                 "scopeName": "source.evie",
-                "path": "./syntaxes/Evie.tmLanguage"
-            }
-        ],
-        "commands": [
-            {
-                "command": "extension.hello",
-                "title": "Say hello!"
-            },
-            {
-                "command": "Haloo",
-                "title": "Haloo?"
+                "path": "./syntaxes/Evie.tmLanguage.json"
             }
         ]
     },
@@ -52,14 +47,11 @@
         "watch": "tsc -watch -p ./"
     },
     "devDependencies": {
-        "@types/node": "latest",
-        "@types/vscode": "latest",
-        "@typescript-eslint/eslint-plugin": "latest",
-        "@typescript-eslint/parser": "latest",
-        "eslint": "latest",
-        "typescript": "latest"
-    },
-    "dependencies": {
-        "vscode": "^0.9.9"
+        "@types/node": "^12.12.0",
+        "@types/vscode": "^1.34.0",
+        "@typescript-eslint/eslint-plugin": "^4.16.0",
+        "@typescript-eslint/parser": "^4.16.0",
+        "eslint": "^7.21.0",
+        "typescript": "^4.2.2"
     }
 }

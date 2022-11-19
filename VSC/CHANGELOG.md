@@ -1,9 +1,8 @@
-# Change Log
+# Change log
+## v0.0.2:
+Fixed:
+- Casting with a base type not using right colors.
 
-All notable changes to the "evie" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+## v0.0.1:
+Added:
+- Init
